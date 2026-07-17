@@ -158,8 +158,15 @@ export function simulateGemini(type, inputs) {
         };
 
         resolve(simulatedData[year] || defaultResult);
+      } else {
+        // Default fallback for any other type (like 'chatbot')
+        resolve({
+          reply: `(Offline Simulator) Received your input for ${type}. Live API requires a key.`,
+          tactical_breakdown: "Offline Mode",
+          historical_significance: "Offline Mode"
+        });
       }
-    }, 1000);
+    }, 100);
   });
 }
 

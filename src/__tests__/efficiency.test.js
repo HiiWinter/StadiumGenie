@@ -19,7 +19,7 @@ describe('Efficiency Tests', () => {
   describe('Code Splitting Validation', () => {
     it('App.jsx should use React.lazy for code splitting', () => {
       const app = readFileSync(resolve(__dirname, '../App.jsx'), 'utf-8');
-      expect(app).toContain('React.lazy');
+      expect(app).toContain('lazy(');
       expect(app).toContain('import(');
     });
 

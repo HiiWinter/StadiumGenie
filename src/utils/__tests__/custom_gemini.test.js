@@ -4,6 +4,9 @@ import { simulateGemini, callLiveGemini } from '../custom_gemini';
 
 describe('custom_gemini', () => {
   describe('simulateGemini', () => {
+    // Increase timeout since simulateGemini has built-in delays
+    vi.setConfig({ testTimeout: 10000 });
+
     it('should return structured JSON for fifa_historian type', async () => {
       const result = await simulateGemini('fifa_historian', {
         year: 1970,

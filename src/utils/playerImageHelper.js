@@ -1287,7 +1287,7 @@ const localPlayerFiles = {
  * @returns {string} The image URL or asset.
  */
 export function getPlayerImageUrl(playerName, countryName = '') {
-  if (!playerName) return '';
+  if (!playerName) return null;
 
   const name = playerName.trim();
   const lowerName = name.toLowerCase();
