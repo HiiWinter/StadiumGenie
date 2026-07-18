@@ -2,9 +2,22 @@
 import { describe, it, expect, vi } from 'vitest';
 import { simulateGemini, callLiveGemini } from '../custom_gemini';
 
+const mockSuccessResponse = () => ({
+  ok: true,
+  status: 200,
+  json: async () => ({
+    candidates: [
+      {
+        content: {
+          parts: [{ text: JSON.stringify({ reply: 'Hello from mock Gemini' }) }]
+        }
+      }
+    ]
+  })
+});
+
 describe('custom_gemini', () => {
   describe('simulateGemini', () => {
-    // Increase timeout since simulateGemini has built-in delays
     vi.setConfig({ testTimeout: 10000 });
 
     it('should return structured JSON for fifa_historian type', async () => {
@@ -63,21 +76,15 @@ describe('custom_gemini', () => {
     });
 
     it('should construct proper request URL without API key in URL', async () => {
-      // Mock fetch to capture the request
       const originalFetch = globalThis.fetch;
       let capturedUrl = '';
       globalThis.fetch = vi.fn(async (url) => {
         capturedUrl = url;
-        return { ok: false, status: 401, text: async () => 'Unauthorized' };
+        return mockSuccessResponse();
       });
 
-      try {
-        await callLiveGemini('test-key', 'chatbot', 'Hello');
-      } catch {
-        // Expected to fail
-      }
+      await callLiveGemini('test-key', 'chatbot', 'Hello');
 
-      // API key should NOT be in URL (security requirement)
       expect(capturedUrl).not.toContain('test-key');
       expect(capturedUrl).toContain('generativelanguage.googleapis.com');
       
@@ -89,14 +96,10 @@ describe('custom_gemini', () => {
       let capturedHeaders = {};
       globalThis.fetch = vi.fn(async (_url, options) => {
         capturedHeaders = options.headers;
-        return { ok: false, status: 401, text: async () => 'Unauthorized' };
+        return mockSuccessResponse();
       });
 
-      try {
-        await callLiveGemini('my-secret-key', 'chatbot', 'Hello');
-      } catch {
-        // Expected to fail
-      }
+      await callLiveGemini('my-secret-key', 'chatbot', 'Hello');
 
       expect(capturedHeaders['x-goog-api-key']).toBe('my-secret-key');
       expect(capturedHeaders['Content-Type']).toBe('application/json');
@@ -109,14 +112,10 @@ describe('custom_gemini', () => {
       let capturedBody = '';
       globalThis.fetch = vi.fn(async (_url, options) => {
         capturedBody = options.body;
-        return { ok: false, status: 401, text: async () => 'Unauthorized' };
+        return mockSuccessResponse();
       });
 
-      try {
-        await callLiveGemini('key', 'chatbot', null);
-      } catch {
-        // Expected
-      }
+      await callLiveGemini('key', 'chatbot', null);
 
       const parsed = JSON.parse(capturedBody);
       expect(parsed.contents[0].parts[0].text).toBe('');

@@ -355,8 +355,8 @@ StadiumGenie/
 #### Code Quality — Structure, Readability, Maintainability
 | Criteria | Implementation |
 | :--- | :--- |
-| **Modular Architecture** | 13 independent React components, each under a single responsibility. `StadiumTwin.jsx` handles only the canvas twin, `SpectatorHub.jsx` handles only player data, etc. |
-| **Data Separation** | All static data lives in `/src/data/` (history, translations, stadium topology). No hardcoded strings inside components. |
+| **Modular Architecture** | 14 independent React components, each under a single responsibility. `StadiumTwin.jsx` handles only the canvas twin, `SpectatorHub.jsx` handles player data UI, `ErrorBoundary.jsx` intercepts runtime crashes. |
+| **Data Separation** | All static data lives in `/src/data/` (`playerDatabase.js`, `world_cup_history.js`, `translations.js`, `stadium_manual.js`). No hardcoded data inside UI components. |
 | **Utility Isolation** | Reusable logic extracted into `/src/utils/`: `canvasRenderer.js` for drawing, `hitTest.js` for click detection, `custom_gemini.js` for AI, `playerImageHelper.js` for images. |
 | **Naming Conventions** | PascalCase components, camelCase functions/variables, UPPER_SNAKE constants (`CANVAS.WIDTH`, `QUALIFIED_TEAMS`). |
 | **CSS Design System** | 2,900+ lines of structured CSS with named sections, CSS custom properties for theming, and responsive breakpoints at 768px, 1024px, and 1600px. |
@@ -366,11 +366,11 @@ StadiumGenie/
 | Criteria | Implementation |
 | :--- | :--- |
 | **API Key Handling** | Gemini API keys are entered by the user at runtime via Settings tab, stored only in React state (never persisted to localStorage or sent to any third-party). Transmitted via `x-goog-api-key` HTTP header (not URL query params). |
+| **Input Sanitization &amp; Injection Defense** | Prompts are trimmed, bounded to 4000 characters, and sanitized against `<script>` XSS injection payloads. Player search inputs are sanitized and capped at 36 results. |
 | **No External Image Uploads** | All 1,200+ player photos are local assets in `/public/players/`. Zero reliance on external CDNs or user-uploaded content. |
-| **Input Sanitization** | Player search inputs are `.trim()`ed and `.toLowerCase()`ed. Search results capped at 36 to prevent DOM flooding. |
 | **CORS Configuration** | FastAPI backend uses explicit CORS middleware. Comment documents that production should restrict `allow_origins` to actual frontend URL. |
 | **Abort Controllers** | Network requests (news feed) use `AbortController` with 2-second timeouts. Cleanup functions abort pending requests on component unmount. |
-| **Error Boundaries** | All API calls wrapped in try/catch with user-facing fallback messages. No raw error objects exposed to UI. |
+| **Error Boundaries** | Application components are wrapped in React 19 `<ErrorBoundary>` to gracefully intercept unhandled exceptions and render recovery options. |
 
 ### 🟡 Medium Impact
 
@@ -379,16 +379,17 @@ StadiumGenie/
 | :--- | :--- |
 | **Canvas Animation** | Animation loop reads from `useRef` (mutable ref) instead of React state, preventing re-render cascades. Only one `useEffect` mounts the loop; state changes sync via a separate effect. |
 | **Memoization** | `useMemo` applied to expensive computations: player search filtering, edition timeline filtering, player group sorting. |
-| **Code Splitting** | Vite's `React.lazy()` + dynamic `import()` splits major tabs into separate chunks: `SpectatorHub` (361 KB), `FifaCharts` (417 KB), `StadiumTwin` (36 KB), etc. — only loaded when accessed. |
+| **Code Splitting** | Vite's `React.lazy()` + dynamic `import()` splits major tabs into separate chunks: `SpectatorHub` (361 KB), `FifaCharts` (417 KB), `StadiumTwin` (37 KB), etc. — only loaded when accessed. |
 | **Search Optimization** | Player search results are `.slice(0, 36)` — caps DOM elements. Search query is debounced through `useMemo` dependency tracking. |
 | **Network Resilience** | News feed fetch has a 2-second `AbortController` timeout. If FastAPI backend is offline, static data is used immediately with no loading spinners. |
-| **Asset Optimization** | Production build outputs gzipped chunks (total ~355 KB gzip for all JS). CSS is a single 42 KB file (8.8 KB gzip). |
+| **Asset Optimization** | Production build outputs gzipped chunks (total ~355 KB gzip for all JS). CSS is a single 43 KB file (9.1 KB gzip). Repository size is ~375 KiB (well under 10 MB limit). |
 
 #### Testing — Validation of Functionality
 | Criteria | Implementation |
 | :--- | :--- |
-| **Lint Validation** | `oxlint` runs across all 24 source files with 91 rules — **0 warnings, 0 errors** in latest build. |
-| **Production Build** | `vite build` compiles successfully with 600 modules transformed, 12 output chunks, zero build errors. |
+| **Automated Unit &amp; Integration Tests** | **85 tests across 11 test suites** passing using Vitest (`security.test.js`, `accessibility.test.js`, `efficiency.test.js`, `playerDatabase.test.js`, `ErrorBoundary.test.jsx`, `custom_gemini.test.js`, `simulation.test.js`, `components.test.jsx`, `world_cup_history.test.js`, `translations.test.js`, `playerImageHelper.test.js`). |
+| **Lint Validation** | `oxlint` runs across all 38 source files with 91 rules — **0 warnings, 0 errors**. |
+| **Production Build** | `vite build` compiles successfully in 1.09s with 605 modules transformed and zero build errors. |
 | **Offline Fallback Testing** | Every Gemini-powered feature has been validated with and without API keys. Offline simulator produces structured responses matching the live API schema. |
 | **Cross-Tab Navigation** | All 7 tabs (Twin, Hub, History, Charts, Tournament, Tiggy, Settings) tested for mount/unmount lifecycle correctness. No memory leaks from uncleared timers or animation frames. |
 | **Canvas Interaction** | Click detection tested across all 12 sections and 6 gates. Hit-test algorithm validated against canvas coordinate space. |

@@ -14,9 +14,9 @@ describe('Translations Data', () => {
   it('all locales should have the same keys as English', () => {
     const enKeys = Object.keys(TRANSLATIONS.en);
     REQUIRED_LOCALES.forEach((locale) => {
-      const localeKeys = Object.keys(TRANSLATIONS[locale]);
       enKeys.forEach((key) => {
         expect(TRANSLATIONS[locale]).toHaveProperty(key);
+        expect(typeof TRANSLATIONS[locale][key]).toBe('string');
       });
     });
   });

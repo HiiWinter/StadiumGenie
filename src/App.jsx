@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import Sidebar from './components/Sidebar';
 import GenieGuideBot from './components/GenieGuideBot';
 import CelebrationOverlay from './components/CelebrationOverlay';
+import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 
 // Lazy loading heavy component tabs for instant initial render & smooth transitions
@@ -325,6 +326,9 @@ function App() {
 
   return (
     <div className="app-container">
+      <a href="#main-content" className="skip-to-content" style={{ position: 'absolute', top: '-100px', left: '16px', zIndex: 999999, background: 'var(--neon-cyan)', color: '#000', padding: '12px 20px', borderRadius: '8px', fontWeight: 'bold', textDecoration: 'none', transition: 'top 0.2s' }}>
+        Skip to main content
+      </a>
       {showCelebration && (
         <CelebrationOverlay onComplete={handleCelebrationComplete} />
       )}
@@ -385,22 +389,24 @@ function App() {
           </div>
         )}
 
-        {/* Tab rendering: Render active tab on demand with Suspense lazy loading & fade-in animation */}
-        <div className="tab-render-wrapper tab-fade-in" key={activeTab} style={{ height: '100%' }}>
-          <Suspense fallback={<TabFallbackLoader />}>
-            {activeTab === 'twin' && <StadiumTwin apiKey={apiKey} locale={locale} />}
-            {activeTab === 'viewer' && <SpectatorHub locale={locale} />}
-            {activeTab === 'tournament' && <TournamentCenter locale={locale} />}
-            {activeTab === 'history' && <FifaHistory apiKey={apiKey} locale={locale} />}
-            {activeTab === 'charts' && <FifaCharts locale={locale} />}
-            {activeTab === 'settings' && <SettingsTab locale={locale} setLocale={setLocale} theme={theme} setTheme={setTheme} />}
-            {activeTab === 'about' && <AboutTab />}
-          </Suspense>
+        {/* Tab rendering: Render active tab on demand with ErrorBoundary & Suspense lazy loading */}
+        <div id="main-content" tabIndex="-1" className="tab-render-wrapper tab-fade-in" key={activeTab} style={{ height: '100%' }}>
+          <ErrorBoundary>
+            <Suspense fallback={<TabFallbackLoader />}>
+              {activeTab === 'twin' && <StadiumTwin apiKey={apiKey} locale={locale} />}
+              {activeTab === 'viewer' && <SpectatorHub locale={locale} />}
+              {activeTab === 'tournament' && <TournamentCenter locale={locale} />}
+              {activeTab === 'history' && <FifaHistory apiKey={apiKey} locale={locale} />}
+              {activeTab === 'charts' && <FifaCharts locale={locale} />}
+              {activeTab === 'settings' && <SettingsTab locale={locale} setLocale={setLocale} theme={theme} setTheme={setTheme} />}
+              {activeTab === 'about' && <AboutTab />}
+            </Suspense>
+          </ErrorBoundary>
         </div>
       </main>
 
       {/* Floating AI Spectator Companion */}
-      <GenieGuideBot apiKey={apiKey} locale={locale} />
+      <GenieGuideBot apiKey={apiKey} locale={locale} activeTab={activeTab} />
     </div>
   );
 }

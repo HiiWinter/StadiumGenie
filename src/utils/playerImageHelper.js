@@ -27,61 +27,6 @@ const localPlayerFiles = {
   "nadhir benbouali": "/players/alg_nadhir_benbouali.jpg",
   "mohamed amoura": "/players/alg_mohamed_amoura.jpg",
   "adil boulbina": "/players/alg_adil_boulbina.jpg",
-  "fares ghedjemis": "/players/alg_fares_ghedjemis.jpg",
-  "vladimir petkovic": "/players/alg_vladimir_petkovic.jpg",
-  "melvin mastil": "/players/alg_melvin_mastil.jpg",
-  "oussama benbot": "/players/alg_oussama_benbot.jpg",
-  "luca zidane": "/players/alg_luca_zidane.jpg",
-  "aissa mandi": "/players/alg_aissa_mandi.jpg",
-  "achref abada": "/players/alg_achref_abada.jpg",
-  "mohamed amine tougai": "/players/alg_mohamed_amine_tougai.jpg",
-  "zineddine belaid": "/players/alg_zineddine_belaid.jpg",
-  "jaouen hadjam": "/players/alg_jaouen_hadjam.jpg",
-  "rayan ait nouri": "/players/alg_rayan_ait_nouri.jpg",
-  "rafik belghali": "/players/alg_rafik_belghali.jpg",
-  "ramy bensebaini": "/players/alg_ramy_bensebaini.jpg",
-  "samir chergui": "/players/alg_samir_chergui.jpg",
-  "ramiz zerrouki": "/players/alg_ramiz_zerrouki.jpg",
-  "houssem aouar": "/players/alg_houssem_aouar.jpg",
-  "fares chaibi": "/players/alg_fares_chaibi.jpg",
-  "hicham boudaoui": "/players/alg_hicham_boudaoui.jpg",
-  "nabil bentaleb": "/players/alg_nabil_bentaleb.jpg",
-  "ibrahim maza": "/players/alg_ibrahim_maza.jpg",
-  "yassine titraoui": "/players/alg_yassine_titraoui.jpg",
-  "riyad mahrez": "/players/alg_riyad_mahrez.jpg",
-  "amine gouiri": "/players/alg_amine_gouiri.jpg",
-  "anis hadj moussa": "/players/alg_anis_hadj_moussa.jpg",
-  "nadhir benbouali": "/players/alg_nadhir_benbouali.jpg",
-  "mohamed amoura": "/players/alg_mohamed_amoura.jpg",
-  "adil boulbina": "/players/alg_adil_boulbina.jpg",
-  "fares ghedjemis": "/players/alg_fares_ghedjemis.jpg",
-  "vladimir petkovic": "/players/alg_vladimir_petkovic.jpg",
-  "melvin mastil": "/players/alg_melvin_mastil.jpg",
-  "oussama benbot": "/players/alg_oussama_benbot.jpg",
-  "luca zidane": "/players/alg_luca_zidane.jpg",
-  "aissa mandi": "/players/alg_aissa_mandi.jpg",
-  "achref abada": "/players/alg_achref_abada.jpg",
-  "mohamed amine tougai": "/players/alg_mohamed_amine_tougai.jpg",
-  "zineddine belaid": "/players/alg_zineddine_belaid.jpg",
-  "jaouen hadjam": "/players/alg_jaouen_hadjam.jpg",
-  "rayan ait nouri": "/players/alg_rayan_ait_nouri.jpg",
-  "rafik belghali": "/players/alg_rafik_belghali.jpg",
-  "ramy bensebaini": "/players/alg_ramy_bensebaini.jpg",
-  "samir chergui": "/players/alg_samir_chergui.jpg",
-  "ramiz zerrouki": "/players/alg_ramiz_zerrouki.jpg",
-  "houssem aouar": "/players/alg_houssem_aouar.jpg",
-  "fares chaibi": "/players/alg_fares_chaibi.jpg",
-  "hicham boudaoui": "/players/alg_hicham_boudaoui.jpg",
-  "nabil bentaleb": "/players/alg_nabil_bentaleb.jpg",
-  "ibrahim maza": "/players/alg_ibrahim_maza.jpg",
-  "yassine titraoui": "/players/alg_yassine_titraoui.jpg",
-  "riyad mahrez": "/players/alg_riyad_mahrez.jpg",
-  "amine gouiri": "/players/alg_amine_gouiri.jpg",
-  "anis hadj moussa": "/players/alg_anis_hadj_moussa.jpg",
-  "nadhir benbouali": "/players/alg_nadhir_benbouali.jpg",
-  "mohamed amoura": "/players/alg_mohamed_amoura.jpg",
-  "adil boulbina": "/players/alg_adil_boulbina.jpg",
-  "fares ghedjemis": "/players/alg_fares_ghedjemis.jpg",
   "vladimir petkovic": "/players/alg_vladimir_petkovic.jpg",
   "juan musso": "/players/arg_juan_musso.jpg",
   "geronimo rulli": "/players/arg_geronimo_rulli.jpg",
@@ -1202,6 +1147,8 @@ const localPlayerFiles = {
   "oguz aydin": "/players/tur_oguz_aydin.jpg",
   "can uzun": "/players/tur_can_uzun.jpg",
   "matt turner": "/players/usa_matt_turner.jpg",
+
+
   "matt freese": "/players/usa_matt_freese.jpg",
   "chris brady": "/players/usa_chris_brady.jpg",
   "sergino dest": "/players/usa_sergino_dest.jpg",
@@ -1305,7 +1252,7 @@ export function getPlayerImageUrl(playerName, countryName = '') {
   if (normalized === 'lionel messi' || normalized === 'messi') return '/players/messi.png';
   if (normalized === 'kylian mbappe') return '/players/mbappe.png';
   if (normalized === 'cristiano ronaldo') return '/players/ronaldo.png';
-  
+
   // Ronaldo override: Brazil legend vs Portugal superstar
   if (normalized === 'ronaldo') {
     const isBrazil = team.includes('brazil') || team.includes('bra') || name.toLowerCase().includes('nazario');
@@ -1331,7 +1278,7 @@ export function getPlayerImageUrl(playerName, countryName = '') {
   if (normalized === 'neymar' || normalized === 'neymar jr') return '/players/neymar.png';
   if (normalized === 'luka modric' || normalized === 'modric') return '/players/modric.png';
   if (normalized === 'davor suker' || normalized === 'suker') return '/players/suker.png';
-  
+
   // Strip spaces to match key legends
   const normalizedKey = normalized.replace(/\s+/g, '');
   const specialLegends = {

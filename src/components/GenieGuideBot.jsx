@@ -1,7 +1,19 @@
 // src/components/GenieGuideBot.jsx - Redesigned Floating Baby Tiger Chatbot Assistant ("Tiggy")
 import React, { useState, useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
 import { callLiveGemini } from '../utils/custom_gemini';
 import { STADIUM_MANUAL } from '../data/stadium_manual';
+
+/** Maps internal tab keys to human-readable context labels for the AI assistant */
+const TAB_CONTEXT_MAP = {
+  twin: 'Stadium Digital Twin (live crowd monitoring & safety operations)',
+  viewer: 'Spectator Hub (virtual seat guide & stadium navigation)',
+  tournament: 'Tournament Match Centre (live match stats & fixtures)',
+  history: 'FIFA World Cup History (tactical eras & legends database)',
+  charts: 'FIFA Analytics Charts (data visualizations & insights)',
+  settings: 'Application Settings (language, theme, API key configuration)',
+  about: 'About StadiumGenie (project information)'
+};
 
 const OFFLINE_RESPONSES = {
   en: {
@@ -46,7 +58,7 @@ const OFFLINE_RESPONSES = {
   }
 };
 
-export default function GenieGuideBot({ apiKey, locale = 'en' }) {
+export default function GenieGuideBot({ apiKey, locale = 'en', activeTab = 'twin' }) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputVal, setInputVal] = useState("");
   const [messages, setMessages] = useState([]);
@@ -76,6 +88,16 @@ export default function GenieGuideBot({ apiKey, locale = 'en' }) {
     }
   }, [messages, loading]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
   const handleSendText = async (textToSend) => {
     const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -90,10 +112,12 @@ export default function GenieGuideBot({ apiKey, locale = 'en' }) {
     // Call live API if key is available, else offline simulated keywords match
     if (apiKey) {
       try {
+        const tabContext = TAB_CONTEXT_MAP[activeTab] || 'General Dashboard';
         const promptText = 
           `STADIUM REFERENCE CONTEXT:\n${JSON.stringify(STADIUM_MANUAL)}\n\n` +
+          `USER CURRENT PAGE CONTEXT: The user is currently viewing the "${tabContext}" section of the app.\n\n` +
           `USER QUESTION:\n${textToSend}\n\n` +
-          `Respond to the user as Tiggy, a playful baby tiger mascot assistant at the FIFA World Cup. Start or end your response with cute tiger noises (like Grrr, Roar, Purr) and emojis (🐯, 🐾). Answer in the same language as their query: "${locale}".`;
+          `Respond to the user as Tiggy, a playful baby tiger mascot assistant at the FIFA World Cup. Tailor your response to be relevant to their current page context when appropriate. Start or end your response with cute tiger noises (like Grrr, Roar, Purr) and emojis (🐯, 🐾). Answer in the same language as their query: "${locale}".`;
         
         const result = await callLiveGemini(apiKey, 'chatbot', promptText, model);
         const reply = result.reply || JSON.stringify(result);
@@ -270,6 +294,7 @@ export default function GenieGuideBot({ apiKey, locale = 'en' }) {
         className={`chatbot-toggle-btn ${isOpen ? 'active' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
         title="Chat with Tiggy"
+        aria-label={isOpen ? "Close Tiggy chat assistant" : "Open Tiggy chat assistant"}
       >
         {isOpen ? (
           <div style={{ width: 60, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255, 153, 0, 0.2)', borderRadius: '50%', border: '1.5px solid var(--neon-orange)' }}>
@@ -326,7 +351,7 @@ export default function GenieGuideBot({ apiKey, locale = 'en' }) {
               <button className="chat-header-btn" onClick={handleReset} title="Reset Chat" style={{ color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer' }}>
                 <i className="fa-solid fa-rotate-right" />
               </button>
-              <button className="chat-header-btn close" onClick={() => setIsOpen(false)} style={{ color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <button className="chat-header-btn close" onClick={() => setIsOpen(false)} aria-label="Close chat" style={{ color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer' }}>
                 <i className="fa-solid fa-times" />
               </button>
             </div>
@@ -349,7 +374,7 @@ export default function GenieGuideBot({ apiKey, locale = 'en' }) {
           </div>
 
           {/* Messages Feed */}
-          <div className="chat-messages-container" style={{ padding: 12, height: 260, overflowY: 'auto' }}>
+          <div className="chat-messages-container" role="log" aria-live="polite" aria-relevant="additions" style={{ padding: 12, height: 260, overflowY: 'auto' }}>
             {messages.map((msg, i) => (
               <div key={i} className={`chat-message-bubble-wrap ${msg.sender}`} style={{ display: 'flex', justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start', marginBottom: 10 }}>
                 <div className="bubble" style={{
@@ -419,3 +444,9 @@ export default function GenieGuideBot({ apiKey, locale = 'en' }) {
     </div>
   );
 }
+
+GenieGuideBot.propTypes = {
+  apiKey: PropTypes.string,
+  locale: PropTypes.string,
+  activeTab: PropTypes.string
+};

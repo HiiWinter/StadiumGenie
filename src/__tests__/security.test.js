@@ -2,6 +2,20 @@
 import { describe, it, expect, vi } from 'vitest';
 import { callLiveGemini } from '../utils/custom_gemini';
 
+const mockSuccessResponse = () => ({
+  ok: true,
+  status: 200,
+  json: async () => ({
+    candidates: [
+      {
+        content: {
+          parts: [{ text: JSON.stringify({ reply: 'Security Mock OK' }) }]
+        }
+      }
+    ]
+  })
+});
+
 describe('Security Tests', () => {
   describe('API Key Protection', () => {
     it('should never include API key in URL query parameters', async () => {
@@ -9,14 +23,10 @@ describe('Security Tests', () => {
       let capturedUrl = '';
       globalThis.fetch = vi.fn(async (url) => {
         capturedUrl = url;
-        return { ok: false, status: 401, text: async () => 'Unauthorized' };
+        return mockSuccessResponse();
       });
 
-      try {
-        await callLiveGemini('super-secret-key-123', 'chatbot', 'Test');
-      } catch {
-        // Expected
-      }
+      await callLiveGemini('super-secret-key-123', 'chatbot', 'Test');
 
       expect(capturedUrl).not.toContain('super-secret-key-123');
       expect(capturedUrl).not.toContain('key=');
@@ -29,14 +39,10 @@ describe('Security Tests', () => {
       let capturedOptions = {};
       globalThis.fetch = vi.fn(async (_url, options) => {
         capturedOptions = options;
-        return { ok: false, status: 401, text: async () => 'Unauthorized' };
+        return mockSuccessResponse();
       });
 
-      try {
-        await callLiveGemini('my-api-key', 'chatbot', 'Test');
-      } catch {
-        // Expected
-      }
+      await callLiveGemini('my-api-key', 'chatbot', 'Test');
 
       expect(capturedOptions.headers['x-goog-api-key']).toBe('my-api-key');
       
@@ -48,14 +54,10 @@ describe('Security Tests', () => {
       let capturedHeaders = {};
       globalThis.fetch = vi.fn(async (_url, options) => {
         capturedHeaders = options.headers;
-        return { ok: false, status: 401, text: async () => 'Unauthorized' };
+        return mockSuccessResponse();
       });
 
-      try {
-        await callLiveGemini('  trimmed-key  ', 'chatbot', 'Test');
-      } catch {
-        // Expected
-      }
+      await callLiveGemini('  trimmed-key  ', 'chatbot', 'Test');
 
       expect(capturedHeaders['x-goog-api-key']).toBe('trimmed-key');
       
@@ -63,24 +65,39 @@ describe('Security Tests', () => {
     });
   });
 
-  describe('Input Sanitization', () => {
+  describe('Input Sanitization & Injection Defense', () => {
     it('should handle null prompt text without crashing', async () => {
       const originalFetch = globalThis.fetch;
       let capturedBody = '';
       globalThis.fetch = vi.fn(async (_url, options) => {
         capturedBody = options.body;
-        return { ok: false, status: 401, text: async () => 'Unauthorized' };
+        return mockSuccessResponse();
       });
 
-      try {
-        await callLiveGemini('key', 'chatbot', null);
-      } catch {
-        // Expected
-      }
+      await callLiveGemini('key', 'chatbot', null);
 
       const parsed = JSON.parse(capturedBody);
       expect(typeof parsed.contents[0].parts[0].text).toBe('string');
       
+      globalThis.fetch = originalFetch;
+    });
+
+    it('should strip script tags from prompt inputs', async () => {
+      const originalFetch = globalThis.fetch;
+      let capturedBody = '';
+      globalThis.fetch = vi.fn(async (_url, options) => {
+        capturedBody = options.body;
+        return mockSuccessResponse();
+      });
+
+      const maliciousPrompt = 'Hello <script>alert("xss")</script> stadium!';
+      await callLiveGemini('key', 'chatbot', maliciousPrompt);
+
+      const parsed = JSON.parse(capturedBody);
+      const text = parsed.contents[0].parts[0].text;
+      expect(text).not.toContain('<script>');
+      expect(text).toContain('Hello  stadium!');
+
       globalThis.fetch = originalFetch;
     });
 
@@ -89,14 +106,10 @@ describe('Security Tests', () => {
       let capturedBody = '';
       globalThis.fetch = vi.fn(async (_url, options) => {
         capturedBody = options.body;
-        return { ok: false, status: 401, text: async () => 'Unauthorized' };
+        return mockSuccessResponse();
       });
 
-      try {
-        await callLiveGemini('key', 'chatbot', undefined);
-      } catch {
-        // Expected
-      }
+      await callLiveGemini('key', 'chatbot', undefined);
 
       const parsed = JSON.parse(capturedBody);
       expect(typeof parsed.contents[0].parts[0].text).toBe('string');
@@ -121,14 +134,10 @@ describe('Security Tests', () => {
       let capturedMethod = '';
       globalThis.fetch = vi.fn(async (_url, options) => {
         capturedMethod = options.method;
-        return { ok: false, status: 401, text: async () => 'Unauthorized' };
+        return mockSuccessResponse();
       });
 
-      try {
-        await callLiveGemini('key', 'chatbot', 'Test');
-      } catch {
-        // Expected
-      }
+      await callLiveGemini('key', 'chatbot', 'Test');
 
       expect(capturedMethod).toBe('POST');
       
@@ -140,14 +149,10 @@ describe('Security Tests', () => {
       let capturedHeaders = {};
       globalThis.fetch = vi.fn(async (_url, options) => {
         capturedHeaders = options.headers;
-        return { ok: false, status: 401, text: async () => 'Unauthorized' };
+        return mockSuccessResponse();
       });
 
-      try {
-        await callLiveGemini('key', 'chatbot', 'Test');
-      } catch {
-        // Expected
-      }
+      await callLiveGemini('key', 'chatbot', 'Test');
 
       expect(capturedHeaders['Content-Type']).toBe('application/json');
       

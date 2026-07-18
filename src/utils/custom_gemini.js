@@ -1,5 +1,10 @@
 // src/utils/custom_gemini.js - Injects system prompts and handles live Gemini API key connection vs. simulated responses
 
+/**
+ * System prompt templates for each Gemini AI persona.
+ * Each key maps to a role-specific grounding instruction that defines output schema and behavior.
+ * @type {Object<string, string>}
+ */
 export const SYSTEM_PROMPTS = {
   ops_orchestrator: `You are "Command-Orchestrator", the operations intelligence engine for the stadium.
 Your job is to analyze real-time alerts, compute flow mitigations, and draft emergency communications.
@@ -64,6 +69,14 @@ Always output in JSON matching the SCHEMA:
 };
 
 // Simulated Gemini responses for quick hackathon demonstrations without API Key configuration
+/**
+ * Simulates a Gemini AI response offline using pre-defined data for each prompt type.
+ * Returns a Promise that resolves after a short delay to mimic real API latency.
+ *
+ * @param {string} type - The type of simulation ('ops_orchestrator' | 'fifa_historian' | 'chatbot').
+ * @param {Object} inputs - Context-specific inputs (e.g., { density, gate } for ops, { year, winner, host } for historian).
+ * @returns {Promise<Object>} Simulated structured JSON response matching the type's schema.
+ */
 export function simulateGemini(type, inputs) {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -171,20 +184,38 @@ export function simulateGemini(type, inputs) {
 }
 
 // Call live Gemini API using user-provided API key and optional model selection
+/**
+ * Calls the live Google Gemini API with the user's API key.
+ * Constructs a secure POST request with the API key transmitted exclusively via the `x-goog-api-key` header.
+ * All prompt text is sanitized to a string and bounded to 4000 characters before transmission.
+ *
+ * @param {string} apiKey - The user's Gemini API key.
+ * @param {string} type - The prompt type, used to select the system instruction from SYSTEM_PROMPTS.
+ * @param {string} promptText - The user's prompt text.
+ * @param {string} [model='gemini-1.5-flash'] - The Gemini model to use.
+ * @returns {Promise<Object>} Parsed JSON response from the Gemini API.
+ * @throws {Error} If the API key is missing, the response is not OK, or the response is empty.
+ */
 export async function callLiveGemini(apiKey, type, promptText, model = 'gemini-1.5-flash') {
-  const cleanApiKey = (apiKey || '').trim();
+  const cleanApiKey = (apiKey || '').trim().replace(/["'\r\n]/g, '');
   if (!cleanApiKey) {
     throw new Error("API Key is required to call live Gemini service.");
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  // Input Sanitization & Length Boundary Safeguard (Max 4000 chars)
+  const safePrompt = String(promptText || '')
+    .trim()
+    .slice(0, 4000)
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   const systemInstruction = SYSTEM_PROMPTS[type] || "You are a football analytics expert.";
 
   const requestBody = {
     contents: [
       {
         role: "user",
-        parts: [{ text: String(promptText || '') }]
+        parts: [{ text: safePrompt }]
       }
     ],
     systemInstruction: {
@@ -218,7 +249,9 @@ export async function callLiveGemini(apiKey, type, promptText, model = 'gemini-1
 
     return JSON.parse(candidateText.trim());
   } catch (err) {
-    console.error("Live Gemini Call Failed: ", err.message || err);
-    throw err;
+    const safeMsg = (err && err.message) ? err.message.replace(cleanApiKey, '[REDACTED_KEY]') : 'Gemini API call failed';
+    console.error("Live Gemini Call Failed: ", safeMsg);
+    throw new Error(safeMsg);
   }
 }
+

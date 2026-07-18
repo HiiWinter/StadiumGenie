@@ -814,7 +814,7 @@ export default function StadiumTwin({ apiKey, locale = 'en' }) {
                 <span>{t.securityShift}</span>
                 <span style={{ fontFamily: 'monospace', color: 'var(--neon-cyan)' }}>{securityShift}</span>
               </label>
-              <input type="range" min={0} max={10} value={securityShift} onChange={handleSecuritySlider} />
+              <input type="range" min={0} max={10} value={securityShift} onChange={handleSecuritySlider} aria-label={t.securityShift} />
             </div>
 
             <button className={`action-btn ${lowWaterActive ? 'active' : ''}`} onClick={toggleLowWater}>
@@ -842,17 +842,17 @@ export default function StadiumTwin({ apiKey, locale = 'en' }) {
           </div>
 
           {/* Gemini response console */}
-          <div className="flat-panel response-console-container">
+          <div className="flat-panel response-console-container" role="region" aria-label="AI Incident Response Console">
             <div className="card-title">
               <span><i className="fa-solid fa-robot" style={{ marginRight: 6 }} /> {t.geminiResponse}</span>
-              <button className="copy-btn" onClick={handleCopyJson}>
+              <button className="copy-btn" onClick={handleCopyJson} aria-label="Copy Gemini JSON output">
                 <i className={copied ? 'fa-solid fa-check' : 'fa-solid fa-copy'} />
                 {copied ? ` ${t.copied}` : ` ${t.copy}`}
               </button>
             </div>
-            <pre className="gemini-response-box">{geminiResult}</pre>
+            <pre className="gemini-response-box" aria-live="polite" aria-label="Gemini Analysis Results">{geminiResult}</pre>
 
-            <div className="console-logs-box">
+            <div className="console-logs-box" aria-live="polite" role="log" aria-label="Stadium Operations Real-Time Telemetry Feed">
               <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: 4 }}>
                 {t.consoleLogs.toUpperCase()}
               </div>
